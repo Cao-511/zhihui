@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.platform.mapper.MeterReadingMapper">
+    <!-- 分页查询 -->
+    <select id="queryPage"  resultType="com.project.platform.entity.MeterReading">
+        SELECT meter_reading.*,house.id as houseId,house.house_number as houseName,
+        building.id AS buildingId, building.code as buildingName
+        FROM meter_reading
+        left join house on house.id=meter_reading.house_id
+        LEFT JOIN building ON building.id = house.building_id
+        <include refid="queryConditions"/>
+        ORDER BY meter_reading.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <!-- 查询总数 -->
+    <select id="queryCount"  resultType="int">
+        SELECT count(meter_reading.id) FROM meter_reading
+        left join house on house.id=meter_reading.house_id
+        LEFT JOIN building ON building.id = house.building_id
+        <include refid="queryConditions"/>
+    </select>
+
+    <!-- 查询条件 -->
+    <sql id="queryConditions">
+        <where>
+            <if test="query.type != null and query.type.trim() != ''">
+                AND meter_reading.type = #{query.type}
+            </if>
+            <if test="query.readBy != null and query.readBy.trim() != ''">
+                AND meter_reading.read_by LIKE CONCAT('%', #{query.readBy}, '%')
+            </if>
+            <if test="query.buildingName != null and query.buildingName.trim() != ''">
+                AND building.code  LIKE CONCAT('%', #{query.buildingName}, '%')
+            </if>
+            <if test="query.houseNumber != null and query.houseNumber.trim() != ''">
+                AND house.house_number  LIKE CONCAT('%', #{query.houseNumber}, '%')
+            </if>
+            <if test="query.houseIds != null and query.houseIds.size() > 0">
+                AND (
+                <foreach collection="query.houseIds" item="houseId" separator=" OR ">
+                    house.house_id = #{houseId}
+                </foreach>
+                )
+            </if>
+        </where>
+    </sql>
+
+    <!-- 插入 -->
+    <insert id="insert" parameterType="com.project.platform.entity.MeterReading" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO meter_reading
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="buildingId != null">building_id,</if>
+            <if test="houseId != null">house_id,</if>
+            <if test="type != null">type,</if>
+            <if test="reading != null">reading,</if>
+            <if test="readingDate != null">reading_date,</if>
+            <if test="fee != null">fee,</if>
+            <if test="readBy != null">read_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="buildingId != null">#{buildingId},</if>
+            <if test="houseId != null">#{houseId},</if>
+            <if test="type != null">#{type},</if>
+            <if test="reading != null">#{reading},</if>
+            <if test="readingDate != null">#{readingDate},</if>
+            <if test="fee != null">#{fee},</if>
+            <if test="readBy != null">#{readBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+
+
+    </insert>
+
+    <!-- 更新 -->
+    <update id="updateById" parameterType="com.project.platform.entity.MeterReading">
+        UPDATE meter_reading
+        <set>
+            <if test="buildingId != null">
+                building_id = #{buildingId},
+            </if>
+            <if test="houseId != null">
+             house_id = #{houseId},
+            </if>
+            <if test="type != null">
+             type = #{type},
+            </if>
+            <if test="reading != null">
+             reading = #{reading},
+            </if>
+            <if test="readingDate != null">
+             reading_date = #{readingDate},
+            </if>
+            <if test="fee != null">
+             fee = #{fee},
+            </if>
+            <if test="readBy != null">
+             read_by = #{readBy},
+            </if>
+            <if test="createTime != null">
+             create_time = #{createTime},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- 根据ID列表删除 -->
+    <delete id="removeByIds">
+        DELETE FROM meter_reading
+        WHERE id IN
+        <foreach item="id" collection="list" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>    
+</mapper>
